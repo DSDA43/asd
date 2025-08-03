@@ -1,4 +1,4 @@
-name: "CodeQL Advanced"
+name: "CodeQL C#"
 
 on:
   push:
@@ -6,24 +6,23 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: '24 22 * * 0'
+    - cron: '0 0 * * 0'  # Every Sunday
 
 jobs:
   analyze:
-    name: Analyze (Python)
-    runs-on: ubuntu-latest
+    name: Analyze C#
+    runs-on: windows-latest  # Required for most .NET builds
     permissions:
       security-events: write
-      actions: read
       contents: read
+      actions: read
       packages: read
 
     strategy:
       fail-fast: false
       matrix:
-        include:
-        - language: python
-          build-mode: none
+        language: [ csharp ]
+        build-mode: [ autobuild ]  # Default for .NET projects using MSBuild/Solution files
 
     steps:
     - name: Checkout repository
@@ -36,7 +35,9 @@ jobs:
         build-mode: ${{ matrix.build-mode }}
         queries: security-extended
 
+    - name: Autobuild
+      if: matrix.build-mode == 'autobuild'
+      uses: github/codeql-action/autobuild@v3
+
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
